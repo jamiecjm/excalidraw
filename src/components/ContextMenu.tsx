@@ -60,9 +60,9 @@ export const ContextMenu = React.memo(
       >
         <DropdownMenu.Content
           side="bottom"
-          sideOffset={top}
+          sideOffset={top + 5}
           align="start"
-          alignOffset={left}
+          alignOffset={left + 5}
           style={{ zIndex: 9999999999999999 }}
         >
           {filteredItems.map((item, idx) => {
@@ -92,7 +92,20 @@ export const ContextMenu = React.memo(
               }
             }
 
-            return <DropdownMenu.Item>{label}</DropdownMenu.Item>;
+            return (
+              <DropdownMenu.Item
+                onSelect={() => {
+                  // we need update state before executing the action in case
+                  // the action uses the appState it's being passed (that still
+                  // contains a defined contextMenu) to return the next state.
+                  setAppState({ contextMenu: null }, () => {
+                    actionManager.executeAction(item, "contextMenu");
+                  });
+                }}
+              >
+                {label}
+              </DropdownMenu.Item>
+            );
           })}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
