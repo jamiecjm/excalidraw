@@ -5,6 +5,7 @@ import { RoughCanvas } from "roughjs/bin/canvas";
 import rough from "roughjs/bin/rough";
 import clsx from "clsx";
 import { nanoid } from "nanoid";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 import {
   actionAddToLibrary,
@@ -1237,14 +1238,26 @@ class App extends React.Component<AppProps, AppState> {
                             closable={this.state.toast.closable}
                           />
                         )}
-                        {this.state.contextMenu && (
-                          <ContextMenu
-                            items={this.state.contextMenu.items}
-                            top={this.state.contextMenu.top}
-                            left={this.state.contextMenu.left}
-                            actionManager={this.actionManager}
-                          />
-                        )}
+                        <DropdownMenu.Root>
+                          {this.state.contextMenu && (
+                            <ContextMenu
+                              items={this.state.contextMenu.items}
+                              top={this.state.contextMenu.top}
+                              left={this.state.contextMenu.left}
+                              actionManager={this.actionManager}
+                            />
+                          )}
+                          <DropdownMenu.Trigger
+                            asChild
+                            style={{
+                              height: 0,
+                              width: this.state.width,
+                              position: "absolute",
+                            }}
+                          >
+                            <div></div>
+                          </DropdownMenu.Trigger>
+                        </DropdownMenu.Root>
                         <main>{this.renderCanvas()}</main>
                         {this.renderFrameNames()}
                       </ExcalidrawActionManagerContext.Provider>

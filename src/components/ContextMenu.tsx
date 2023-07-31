@@ -15,6 +15,7 @@ import {
   useExcalidrawSetAppState,
 } from "./App";
 import React from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 export type ContextMenuItem = typeof CONTEXT_MENU_SEPARATOR | Action;
 
@@ -53,19 +54,16 @@ export const ContextMenu = React.memo(
     }, []);
 
     return (
-      <Popover
-        onCloseRequest={() => setAppState({ contextMenu: null })}
-        top={top}
-        left={left}
-        fitInViewport={true}
-        offsetLeft={appState.offsetLeft}
-        offsetTop={appState.offsetTop}
-        viewportWidth={appState.width}
-        viewportHeight={appState.height}
+      <DropdownMenu.Portal
+        forceMount
+        container={document.body.querySelector<HTMLElement>(".excalidraw")}
       >
-        <ul
-          className="context-menu"
-          onContextMenu={(event) => event.preventDefault()}
+        <DropdownMenu.Content
+          side="bottom"
+          sideOffset={top}
+          align="start"
+          alignOffset={left}
+          style={{ zIndex: 9999999999999999 }}
         >
           {filteredItems.map((item, idx) => {
             if (item === CONTEXT_MENU_SEPARATOR) {
@@ -75,7 +73,7 @@ export const ContextMenu = React.memo(
               ) {
                 return null;
               }
-              return <hr key={idx} className="context-menu-item-separator" />;
+              return <DropdownMenu.Separator />;
             }
 
             const actionName = item.name;
@@ -94,37 +92,82 @@ export const ContextMenu = React.memo(
               }
             }
 
-            return (
-              <li
-                key={idx}
-                data-testid={actionName}
-                onClick={() => {
-                  // we need update state before executing the action in case
-                  // the action uses the appState it's being passed (that still
-                  // contains a defined contextMenu) to return the next state.
-                  setAppState({ contextMenu: null }, () => {
-                    actionManager.executeAction(item, "contextMenu");
-                  });
-                }}
-              >
-                <button
-                  className={clsx("context-menu-item", {
-                    dangerous: actionName === "deleteSelectedElements",
-                    checkmark: item.checked?.(appState),
-                  })}
-                >
-                  <div className="context-menu-item__label">{label}</div>
-                  <kbd className="context-menu-item__shortcut">
-                    {actionName
-                      ? getShortcutFromShortcutName(actionName as ShortcutName)
-                      : ""}
-                  </kbd>
-                </button>
-              </li>
-            );
+            return <DropdownMenu.Item>{label}</DropdownMenu.Item>;
           })}
-        </ul>
-      </Popover>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+      // <Popover
+      //   onCloseRequest={() => setAppState({ contextMenu: null })}
+      //   top={top}
+      //   left={left}
+      //   fitInViewport={true}
+      //   offsetLeft={appState.offsetLeft}
+      //   offsetTop={appState.offsetTop}
+      //   viewportWidth={appState.width}
+      //   viewportHeight={appState.height}
+      // >
+      //   <ul
+      //     className="context-menu"
+      //     onContextMenu={(event) => event.preventDefault()}
+      //   >
+      //     {filteredItems.map((item, idx) => {
+      //       if (item === CONTEXT_MENU_SEPARATOR) {
+      //         if (
+      //           !filteredItems[idx - 1] ||
+      //           filteredItems[idx - 1] === CONTEXT_MENU_SEPARATOR
+      //         ) {
+      //           return null;
+      //         }
+      //         return <hr key={idx} className="context-menu-item-separator" />;
+      //       }
+
+      //       const actionName = item.name;
+      //       let label = "";
+      //       if (item.contextItemLabel) {
+      //         if (typeof item.contextItemLabel === "function") {
+      //           label = t(
+      //             item.contextItemLabel(
+      //               elements,
+      //               appState,
+      //               actionManager.app,
+      //             ) as unknown as TranslationKeys,
+      //           );
+      //         } else {
+      //           label = t(item.contextItemLabel as unknown as TranslationKeys);
+      //         }
+      //       }
+
+      //       return (
+      //         <li
+      //           key={idx}
+      //           data-testid={actionName}
+      //           onClick={() => {
+      //             // we need update state before executing the action in case
+      //             // the action uses the appState it's being passed (that still
+      //             // contains a defined contextMenu) to return the next state.
+      //             setAppState({ contextMenu: null }, () => {
+      //               actionManager.executeAction(item, "contextMenu");
+      //             });
+      //           }}
+      //         >
+      //           <button
+      //             className={clsx("context-menu-item", {
+      //               dangerous: actionName === "deleteSelectedElements",
+      //               checkmark: item.checked?.(appState),
+      //             })}
+      //           >
+      //             <div className="context-menu-item__label">{label}</div>
+      //             <kbd className="context-menu-item__shortcut">
+      //               {actionName
+      //                 ? getShortcutFromShortcutName(actionName as ShortcutName)
+      //                 : ""}
+      //             </kbd>
+      //           </button>
+      //         </li>
+      //       );
+      //     })}
+      //   </ul>
+      // </Popover>
     );
   },
 );
