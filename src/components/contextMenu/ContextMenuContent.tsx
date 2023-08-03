@@ -13,6 +13,7 @@ export type ContextMenuContentProps = {
   items: ContextMenuItems;
   top: number;
   left: number;
+  onInteractOutside: () => void;
 };
 
 export const CONTEXT_MENU_SEPARATOR = "separator";
@@ -22,6 +23,7 @@ export const ContextMenuContent = ({
   items,
   top,
   left,
+  onInteractOutside,
 }: ContextMenuContentProps) => {
   const appState = useExcalidrawAppState();
   const elements = useExcalidrawElements();
@@ -49,8 +51,8 @@ export const ContextMenuContent = ({
       sideOffset={top + 5}
       align="start"
       alignOffset={left + 5}
-      style={{ zIndex: 9999999999999999 }}
       className="context-menu"
+      onInteractOutside={onInteractOutside}
     >
       {filteredItems.map((item, idx) => {
         if (item === CONTEXT_MENU_SEPARATOR) {

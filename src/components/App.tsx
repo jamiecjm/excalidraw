@@ -1240,6 +1240,9 @@ class App extends React.Component<AppProps, AppState> {
                             top={this.state.contextMenu.top}
                             left={this.state.contextMenu.left}
                             actionManager={this.actionManager}
+                            onInteractOutside={
+                              this.handleInteractOutsideContextMenu
+                            }
                           />
                         )}
                         <main>{this.renderCanvas()}</main>
@@ -7625,6 +7628,10 @@ class App extends React.Component<AppProps, AppState> {
     } catch (error: any) {
       this.setState({ isLoading: false, errorMessage: error.message });
     }
+  };
+
+  private handleInteractOutsideContextMenu = () => {
+    this.setState({ contextMenu: null });
   };
 
   private handleCanvasContextMenu = (
