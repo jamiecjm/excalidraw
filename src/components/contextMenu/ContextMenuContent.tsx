@@ -1,74 +1,71 @@
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { useExcalidrawAppState, useExcalidrawElements } from "../App";
 import { ActionManager } from "../../actions/manager";
-import { Action } from "../../actions/types";
+import { useExcalidrawAppState, useExcalidrawElements } from "../App";
 import { ContextMenuAction } from "./ContextMenuAction";
+import { ContextMenuGroup } from "./ContextMenuGroup";
+import { ContextMenuSeparator } from "./ContextMenuSeparator";
+import {
+  CONTEXT_MENU_SEPARATOR,
+  ContextMenuItem,
+  ContextMenuItems,
+  isAction,
+  isContextMenuItemGroup,
+} from "./contextMenuUtils";
 
-export type ContextMenuItem = typeof CONTEXT_MENU_SEPARATOR | Action;
-
-export type ContextMenuItems = (ContextMenuItem | false | null | undefined)[];
-
-export type ContextMenuContentProps = {
+type ContextMenuContentProps = {
   actionManager: ActionManager;
   items: ContextMenuItems;
-  top: number;
-  left: number;
-  onInteractOutside: () => void;
 };
-
-export const CONTEXT_MENU_SEPARATOR = "separator";
 
 export const ContextMenuContent = ({
   actionManager,
   items,
-  top,
-  left,
-  onInteractOutside,
 }: ContextMenuContentProps) => {
   const appState = useExcalidrawAppState();
   const elements = useExcalidrawElements();
 
   const filteredItems = items.reduce((acc: ContextMenuItem[], item) => {
-    if (
-      item &&
-      (item === CONTEXT_MENU_SEPARATOR ||
+    if (item === CONTEXT_MENU_SEPARATOR) {
+      acc.push(item);
+    }
+
+    if (isAction(item)) {
+      if (
         !item.predicate ||
         item.predicate(
           elements,
           appState,
           actionManager.app.props,
           actionManager.app,
-        ))
-    ) {
+        )
+      ) {
+        acc.push(item);
+      }
+    }
+
+    if (isContextMenuItemGroup(item)) {
       acc.push(item);
     }
+
     return acc;
   }, []);
 
   return (
-    <DropdownMenuPrimitive.Content
-      side="bottom"
-      sideOffset={top + 5}
-      align="start"
-      alignOffset={left + 5}
-      className="context-menu"
-      onInteractOutside={onInteractOutside}
-    >
+    <>
       {filteredItems.map((item, idx) => {
         if (item === CONTEXT_MENU_SEPARATOR) {
-          if (
-            !filteredItems[idx - 1] ||
-            filteredItems[idx - 1] === CONTEXT_MENU_SEPARATOR
-          ) {
-            return null;
-          }
           return (
-            <DropdownMenuPrimitive.Separator className="context-menu-item-separator" />
+            <ContextMenuSeparator filteredItems={filteredItems} idx={idx} />
+          );
+        }
+
+        if (isContextMenuItemGroup(item)) {
+          return (
+            <ContextMenuGroup group={item} actionManager={actionManager} />
           );
         }
 
         return <ContextMenuAction item={item} actionManager={actionManager} />;
       })}
-    </DropdownMenuPrimitive.Content>
+    </>
   );
 };

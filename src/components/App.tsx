@@ -6,36 +6,7 @@ import rough from "roughjs/bin/rough";
 import clsx from "clsx";
 import { nanoid } from "nanoid";
 
-import {
-  actionAddToLibrary,
-  actionBringForward,
-  actionBringToFront,
-  actionCopy,
-  actionCopyAsPng,
-  actionCopyAsSvg,
-  copyText,
-  actionCopyStyles,
-  actionCut,
-  actionDeleteSelected,
-  actionDuplicateSelection,
-  actionFinalize,
-  actionFlipHorizontal,
-  actionFlipVertical,
-  actionGroup,
-  actionPasteStyles,
-  actionSelectAll,
-  actionSendBackward,
-  actionSendToBack,
-  actionToggleGridMode,
-  actionToggleStats,
-  actionToggleZenMode,
-  actionUnbindText,
-  actionBindText,
-  actionUngroup,
-  actionLink,
-  actionToggleElementLock,
-  actionToggleLinearEditor,
-} from "../actions";
+import { actionCopy, actionCut, actionFinalize } from "../actions";
 import { createRedoAction, createUndoAction } from "../actions/actionHistory";
 import { ActionManager } from "../actions/manager";
 import { actions } from "../actions/register";
@@ -263,11 +234,9 @@ import {
   extractSrc,
   getEmbedLink,
 } from "../element/embeddable";
-import { ContextMenu, CONTEXT_MENU_SEPARATOR } from "./contextMenu/ContextMenu";
-import { ContextMenuItems } from "./contextMenu/ContextMenuContent";
+import { ContextMenu } from "./contextMenu/ContextMenu";
 import LayerUI from "./LayerUI";
 import { Toast } from "./Toast";
-import { actionToggleViewMode } from "../actions/actionToggleViewMode";
 import {
   dataURLToFile,
   generateIdFromFile,
@@ -313,7 +282,6 @@ import {
 } from "../element/Hyperlink";
 import { isLocalLink, normalizeLink, toValidURL } from "../data/url";
 import { shouldShowBoundingBox } from "../element/transformHandles";
-import { actionUnlockAllElements } from "../actions/actionElementLock";
 import { Fonts } from "../scene/Fonts";
 import {
   getFrameElements,
@@ -333,19 +301,14 @@ import {
   excludeElementsInFramesFromSelection,
   makeNextSelectedElementIds,
 } from "../scene/selection";
-import { actionPaste } from "../actions/actionClipboard";
-import {
-  actionRemoveAllElementsFromFrame,
-  actionSelectAllElementsInFrame,
-} from "../actions/actionFrame";
 import { actionToggleHandTool, zoomToFit } from "../actions/actionCanvas";
 import { jotaiStore } from "../jotai";
 import { activeConfirmDialogAtom } from "./ActiveConfirmDialog";
-import { actionWrapTextInContainer } from "../actions/actionBoundText";
 import BraveMeasureTextError from "./BraveMeasureTextError";
 import { activeEyeDropperAtom } from "./EyeDropper";
 import { ValueOf } from "../utility-types";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
+import { getContextMenuItems } from "./contextMenu/contextMenuUtils";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -1240,9 +1203,7 @@ class App extends React.Component<AppProps, AppState> {
                             top={this.state.contextMenu.top}
                             left={this.state.contextMenu.left}
                             actionManager={this.actionManager}
-                            onInteractOutside={
-                              this.handleInteractOutsideContextMenu
-                            }
+                            onInteractOutside={this.closeContextMenu}
                           />
                         )}
                         <main>{this.renderCanvas()}</main>
@@ -7630,7 +7591,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private handleInteractOutsideContextMenu = () => {
+  private closeContextMenu = () => {
     this.setState({ contextMenu: null });
   };
 
@@ -7692,7 +7653,11 @@ class App extends React.Component<AppProps, AppState> {
       },
       () => {
         this.setState({
-          contextMenu: { top, left, items: this.getContextMenuItems(type) },
+          contextMenu: {
+            top,
+            left,
+            items: getContextMenuItems(type, this.state.viewModeEnabled),
+          },
         });
       },
     );
@@ -7889,90 +7854,6 @@ class App extends React.Component<AppProps, AppState> {
       return true;
     }
     return false;
-  };
-
-  private getContextMenuItems = (
-    type: "canvas" | "element",
-  ): ContextMenuItems => {
-    const options: ContextMenuItems = [];
-
-    options.push(actionCopyAsPng, actionCopyAsSvg);
-
-    // canvas contextMenu
-    // -------------------------------------------------------------------------
-
-    if (type === "canvas") {
-      if (this.state.viewModeEnabled) {
-        return [
-          ...options,
-          actionToggleGridMode,
-          actionToggleZenMode,
-          actionToggleViewMode,
-          actionToggleStats,
-        ];
-      }
-
-      return [
-        actionPaste,
-        CONTEXT_MENU_SEPARATOR,
-        actionCopyAsPng,
-        actionCopyAsSvg,
-        copyText,
-        CONTEXT_MENU_SEPARATOR,
-        actionSelectAll,
-        actionUnlockAllElements,
-        CONTEXT_MENU_SEPARATOR,
-        actionToggleGridMode,
-        actionToggleZenMode,
-        actionToggleViewMode,
-        actionToggleStats,
-      ];
-    }
-
-    // element contextMenu
-    // -------------------------------------------------------------------------
-
-    options.push(copyText);
-
-    if (this.state.viewModeEnabled) {
-      return [actionCopy, ...options];
-    }
-
-    return [
-      actionCut,
-      actionCopy,
-      actionPaste,
-      actionSelectAllElementsInFrame,
-      actionRemoveAllElementsFromFrame,
-      CONTEXT_MENU_SEPARATOR,
-      ...options,
-      CONTEXT_MENU_SEPARATOR,
-      actionCopyStyles,
-      actionPasteStyles,
-      CONTEXT_MENU_SEPARATOR,
-      actionGroup,
-      actionUnbindText,
-      actionBindText,
-      actionWrapTextInContainer,
-      actionUngroup,
-      CONTEXT_MENU_SEPARATOR,
-      actionAddToLibrary,
-      CONTEXT_MENU_SEPARATOR,
-      actionSendBackward,
-      actionBringForward,
-      actionSendToBack,
-      actionBringToFront,
-      CONTEXT_MENU_SEPARATOR,
-      actionFlipHorizontal,
-      actionFlipVertical,
-      CONTEXT_MENU_SEPARATOR,
-      actionToggleLinearEditor,
-      actionLink,
-      actionDuplicateSelection,
-      actionToggleElementLock,
-      CONTEXT_MENU_SEPARATOR,
-      actionDeleteSelected,
-    ];
   };
 
   private handleWheel = withBatchedUpdates(
